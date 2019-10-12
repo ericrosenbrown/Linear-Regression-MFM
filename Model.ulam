@@ -1,0 +1,154 @@
+/** brick layer.
+\symbol Mo
+\color #00f
+\symmetries normal
+*/
+
+element Model
+{
+  /**
+    Learning rate. Rate of change for partial derivatives. Out of 10000000
+    \range 1..200
+  */
+  parameter Unsigned learning_rate = 95;
+
+  /**
+    Delete Data. Odds of deleting a data computed on. Out of 100
+    \range 1..100
+  */
+  parameter Unsigned delete_data = 20;
+
+  EventWindow ew;
+  Int weight = 0;
+  Int bias = 0;
+
+  Void behave()
+  {
+    DebugUtils du;
+
+    Int weight_deriv = 0;
+    Int bias_deriv = 0;
+    Int num_samples = 0;
+
+    Int weight_deriv_with_lr = 0;
+    Int bias_deriv_with_lr = 0;
+
+    Int weight_deriv_normalized = 0; //normalized over num_samples
+    Int bias_deriv_normalized = 0; //normalized over num_samples
+
+    Random r;
+
+
+    EventWindow.SiteNum i = 0;
+    for (i = 0; i < 40; i++) 
+    {
+    if(ew[i] is Res) //Convert Res to Model
+      {
+        Model mod;
+        ew[i] = mod;
+      }
+
+    //Learning comes from https://ml-cheatsheet.readthedocs.io/en/latest/linear_regression.html
+    if (ew[i] is Data) //calculate partial derivatives
+      {
+        num_samples = num_samples + 1;
+        Data d = (Data) ew[i];
+        weight_deriv = weight_deriv + (-2*d.x*(d.y - (weight*d.x + bias)));
+        bias_deriv = bias_deriv + (-2*(d.y - (weight*d.x + bias))); 
+
+        if (r.oneIn(delete_data))
+        {
+          Empty e;
+          ew[i] = e;
+        }
+
+      }
+    }
+
+    //Update weight and bias with derivatives
+    //TODOS on comment lines below
+    Int lr = (Int) learning_rate;
+    if (num_samples > 0)
+    {
+      weight_deriv_normalized = (((weight_deriv / num_samples)));
+      bias_deriv_normalized = (((bias_deriv / num_samples)));
+
+      weight_deriv_with_lr = (((weight_deriv_normalized)*lr)/10000000);
+      bias_deriv_with_lr = (((bias_deriv_normalized)*lr)/10000000);
+
+      //du.print("weight_deriv_with_lr");
+      //du.print(weight_deriv_with_lr);
+      //du.print(weight_deriv);
+      //du.print("bias_deriv_with_lr");
+      //du.print(bias_deriv_with_lr);
+      //du.print("weight_deriv_normalized");
+      //du.print(weight_deriv_normalized);
+      //du.print(weight_deriv);
+      //du.print("bias_deriv_no_normalized");
+      //du.print(bias_deriv_normalized);
+      //du.print(bias_deriv);
+
+      //To deal with no floats but needing to follow gradient, just increase/decrease by 1 instead
+      //if the weigt/bias_deriv_normalized is >=1 or <=-1, we should change by a magnitude of 1. Otherwise, keep gradient at 0
+      if (weight_deriv_normalized >= 1)
+      {
+        if (weight_deriv_with_lr > 0) 
+        {
+          weight =  weight - weight_deriv_with_lr;
+        }
+        else
+        {
+          weight = weight - 1;
+        }
+      }
+      if (weight_deriv_normalized <= -1)
+      {
+        if (weight_deriv_with_lr < 0) 
+        {
+          weight =  weight - weight_deriv_with_lr;
+        }
+        else
+        {
+          weight = weight + 1;
+        }
+      }
+
+      if (bias_deriv_normalized >= 1)
+      {
+        if (bias_deriv_with_lr > 0) 
+        {
+          bias =  bias - bias_deriv_with_lr;
+        }
+        else
+        {
+          bias = bias - 1;
+        }
+      }
+      if (bias_deriv_normalized <= -1)
+      {
+        if (bias_deriv_with_lr < 0) 
+        {
+          bias =  bias - bias_deriv_with_lr;
+        }
+        else
+        {
+          bias = bias + 1;
+        }
+      }
+    }
+
+    du.print("weight");
+    du.print(weight);
+    du.print("bias");
+    du.print(bias);
+    //du.print("num_samples");
+    //du.print(num_samples);
+
+    //Diffuse
+    i = (EventWindow.SiteNum) r.between(1,4);
+    if (ew[i] is Empty) 
+    {
+      ew.swap(0,i);
+    }
+  }
+}

@@ -1,0 +1,81 @@
+/** brick layer.
+\symbol DG
+\color #a4c
+\symmetries normal
+*/
+
+element DGen
+{
+
+  /**
+     Data generation. Odds of creating a data.
+     \unit odds
+     \range 1..200
+  */
+  parameter Unsigned pDATA_GENERATE=200;
+
+  /**
+    Slope. Slope of line data comes from.
+    \range 0..20
+  */
+  parameter Unsigned slope=5;
+
+  /**
+    Bias. Bias of line data comes from.
+    \range 0..20
+  */
+  parameter Unsigned bias=5;
+
+  /**
+    Noise. How much noise is added to data.
+    \range 0..20
+  */
+  parameter Unsigned noise=0;
+
+  /**
+    xrange. Range of x that is sampled from line.
+    \range 0..100
+  */
+  parameter Unsigned xrange=0;
+
+  EventWindow ew;
+  Random random;
+
+  Void behave()
+  {
+    //Create DGen above and below if possible
+    if(ew[10] is Empty)
+    {
+      DGen dgen;
+      ew[10] = dgen;
+    }
+
+    if(ew[11] is Empty)
+    {
+      DGen dgen;
+      ew[11] = dgen;
+    }
+
+    if(ew[1] is Empty && random.oneIn(pDATA_GENERATE))
+    {
+      Data d;
+      Random r;
+      Int n = r.between(0,(Int) noise);
+      Int xval = r.between(1,(Int) xrange);
+      Int s = (Int) slope; 
+      Int b = (Int) bias; 
+      Int yval = (Int) (s*xval+b);
+      if (r.oneIn(2)) //make noise negative
+      {
+        yval = yval + (-1*n);
+      }
+      else  //positive noise
+      {
+        yval = yval + n;
+      }
+      d.x = xval;
+      d.y = yval;
+      ew[1] = d;
+    }
+  }
+}
