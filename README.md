@@ -6,7 +6,8 @@ To run the example, just clone this repo, and run the following command:
 
 mfzrun stable_debug.mfz
 
+![start](https://github.com/ericrosenbrown/Linear-Regression-MFM/blob/master/start.png)
 
-The model moves around, and consumes data to update the estimated parameters. DGen generate data sampled from a line with adjustable parameters.
+The model (dark blue) moves around, and consumes data (light blue) to update the estimated parameters. DGen (purple) generate data sampled from a line with adjustable parameters, as does the model.
 
-In the log, you will see the current weight and bias (y-interncept) that is estimated by the model. Open the tool box, and click on the DGen element, and change the slope, bias, noise ect. to the generated data, and the model will perform new estimations.
+In the log, you will see the current weight and bias (y-interncept) that is estimated by the model. Open the tool box, and click on the DGen element, and change the slope, bias, noise ect. to the generated data, and the model will update the parameters as new data comes in. 
